@@ -7,9 +7,9 @@ def catch_exception(func):
     async def decorated_function(ip, port, scan_loop):
         try:
             await func(ip, port, scan_loop)
-            return port, True
+            return [{"port": str(port), "state": "open"}]
         except asyncio.exceptions.TimeoutError:
-            return port, False
+            return [{"port": str(port), "state": "close"}]
     return decorated_function
 
 
@@ -31,18 +31,9 @@ async def handle(request):
     end_port = int(request.match_info.get('end_port'))
 
     loop = asyncio.get_event_loop()
-    future = await asyncio.ensure_future(run(ip, begin_port, end_port, loop))
-
-    print(future)
-
-    response_obj = \
-        {'data':
-            {
-                'ip': ip,
-                'begin_port': begin_port,
-                'end_port': end_port
-            }
-        }
+    results = await asyncio.ensure_future(run(ip, begin_port, end_port, loop))
+    print(results)
+    response_obj = {'data': results}
 
     return web.Response(text=json.dumps(response_obj), status=200)
 
