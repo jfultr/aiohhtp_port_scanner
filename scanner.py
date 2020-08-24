@@ -1,6 +1,17 @@
 from aiohttp import web
+import logging
+import logging.handlers
 import json
 import asyncio
+
+
+def add_log_handler(logger, log_level=logging.DEBUG):
+    # create syslog logger handler
+    sh = logging.handlers.SysLogHandler(address='/dev/log')
+    sh.setLevel(log_level)
+    sf = logging.Formatter('%(name)s: %(message)s')
+    sh.setFormatter(sf)
+    logger.addHandler(sh)
 
 
 def catch_exception(func):
@@ -8,7 +19,7 @@ def catch_exception(func):
         try:
             await func(ip, port, scan_loop)
             return [{"port": str(port), "state": "open"}]
-        except asyncio.exceptions.TimeoutError:
+        except asyncio.TimeoutError:
             return [{"port": str(port), "state": "close"}]
     return decorated_function
 
@@ -39,7 +50,10 @@ async def handle(request):
 
 
 app = web.Application()
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger('scanner')
+add_log_handler(logger)
 app.router.add_get('/scan/{ip}/{begin_port}/{end_port}', handle)
 
 if __name__ == '__main__':
-    web.run_app(app)
+    web.run_app(app, access_log=logger)
