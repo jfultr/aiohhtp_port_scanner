@@ -1,17 +1,9 @@
 from aiohttp import web
+from systemd.journal import JournalHandler
 import logging
 import logging.handlers
 import json
 import asyncio
-
-
-def add_log_handler(logger, log_level=logging.DEBUG):
-    # create syslog logger handler
-    sh = logging.handlers.SysLogHandler(address='/dev/log')
-    sh.setLevel(log_level)
-    sf = logging.Formatter('%(name)s: %(message)s')
-    sh.setFormatter(sf)
-    logger.addHandler(sh)
 
 
 def catch_exception(func):
@@ -50,10 +42,14 @@ async def handle(request):
 
 
 app = web.Application()
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger('scanner')
-add_log_handler(logger)
 app.router.add_get('/scan/{ip}/{begin_port}/{end_port}', handle)
+
+
+logger = logging.getLogger('aiohttp.access')
+logger.setLevel(logging.DEBUG)
+logger.addHandler(logging.StreamHandler())
+logger.addHandler(JournalHandler())
+
 
 if __name__ == '__main__':
     web.run_app(app, access_log=logger)

@@ -3,16 +3,13 @@ MAINTAINER http://fedoraproject.org/wiki/Cloud
 
 RUN dnf -y update && dnf clean all
 RUN dnf -y install python-pip && dnf clean all
-RUN dnf -y install rsyslog && dnf clean all
+RUN dnf -y install git python3-pip gcc python3-devel systemd-devel
+RUN pip3 install git+https://github.com/systemd/python-systemd.git#egg=systemd
 
 WORKDIR /usr/scr/scanner/
 COPY . /usr/scr/scanner/
 
 RUN pip install --no-cache-dir -r requirements.txt
-
-RUN cat scanner.conf > /etc/rsyslog.d/scanner.conf
-
-RUN cat /etc/rsyslog.d/scanner.conf
 
 EXPOSE 8080
 
