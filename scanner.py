@@ -1,7 +1,6 @@
 from aiohttp import web
-from systemd.journal import JournalHandler
+import systemd.journal
 import logging
-import logging.handlers
 import json
 import asyncio
 
@@ -46,10 +45,10 @@ app.router.add_get('/scan/{ip}/{begin_port}/{end_port}', handle)
 
 
 logger = logging.getLogger('aiohttp.access')
-logger.setLevel(logging.DEBUG)
 logger.addHandler(logging.StreamHandler())
-logger.addHandler(JournalHandler())
+logger.addHandler(systemd.journal.JournalHandler())
 
 
 if __name__ == '__main__':
+    logger.setLevel(logging.DEBUG)
     web.run_app(app, access_log=logger)
