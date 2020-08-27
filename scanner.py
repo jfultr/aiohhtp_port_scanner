@@ -3,6 +3,7 @@ import systemd.journal
 import logging
 import json
 import asyncio
+import pytest
 
 
 def catch_exception(func):
@@ -12,6 +13,7 @@ def catch_exception(func):
             return [{"port": str(port), "state": "open"}]
         except asyncio.TimeoutError:
             return [{"port": str(port), "state": "close"}]
+
     return decorated_function
 
 
@@ -40,15 +42,32 @@ async def handle(request):
     return web.Response(text=json.dumps(response_obj), status=200)
 
 
-app = web.Application()
-app.router.add_get('/scan/{ip}/{begin_port}/{end_port}', handle)
+def get_app():
+    new_app = web.Application()
+    new_app.router.add_get('/scan/{ip}/{begin_port}/{end_port}', handle)
+    return new_app
 
+
+# _________________________ pytest _____________________________________
+
+def create_app(loop):
+    test_app = get_app()
+    return test_app
+
+
+async def test_hello(aiohttp_client):
+    client = await aiohttp_client(create_app)
+    resp = await client.get('/')
+    assert resp.status == 200
+    text = await resp.text()
+    assert 'Hello, world' in text
+
+# _________________________ pytest _____________________________________
 
 logger = logging.getLogger('aiohttp.access')
 logger.addHandler(logging.StreamHandler())
 logger.addHandler(systemd.journal.JournalHandler())
 
-
 if __name__ == '__main__':
+    web.run_app(get_app())
     logger.setLevel(logging.DEBUG)
-    web.run_app(app, access_log=logger)
