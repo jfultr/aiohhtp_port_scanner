@@ -1,0 +1,15 @@
+version: "3"
+
+services:
+  web_scanner:
+    build: scanner/
+    restart: always
+    ports:
+    - 8080:8080
+
+  test_web_scanner:
+    build: scanner/
+    command: pytest scanner.py
+    restart: always
+    ports:
+      - 8080:8080
