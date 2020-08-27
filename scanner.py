@@ -57,10 +57,11 @@ def create_app(loop):
 
 async def test_hello(aiohttp_client):
     client = await aiohttp_client(create_app)
-    resp = await client.get('/')
+    resp = await client.get('/scan/192.168.0.1/1/10')
     assert resp.status == 200
-    text = await resp.text()
-    assert 'Hello, world' in text
+    data = await resp.text()
+    dict_data = json.loads(data)
+    assert type(dict_data['data']) is list
 
 # _________________________ pytest _____________________________________
 
